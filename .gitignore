@@ -1,0 +1,10 @@
+# ƒƒO
+logs
+*.log
+npm-debug.log*
+
+# ˆË‘¶ŠÖŒW
+node_modules/
+
+# ŠÂ‹«•Ï”
+setting.json
