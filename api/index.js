@@ -135,7 +135,7 @@ app.put("/api/series", (req, res, next) => {
 // recommend get
 app.get("/api/recommend", (req, res, next) => {
 
-    const command = 'select * from series where date_add(published, interval period month) > now()';
+    const command = "select * from series where date_sub(now(), interval period month) > published and subscribe = '1' ";
     runDbAction(command, [])
         .then(results => res.status(200).json(results));
 
