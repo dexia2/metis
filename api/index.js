@@ -22,13 +22,13 @@ const server = app.listen(setting.server.port, () => {
 // run mysql query
 const dbSetting = setting.connection;
 const mysql = require('mysql');
-const runDbAction = (sql, params) =>
+const runDbAction = (command, params) =>
      new Promise((resolve, reject) => {
         const connection = mysql.createConnection(dbSetting);
         connection.connect(connectErr => {
             if (connectErr) reject(connectErr);
             connection.query(
-                sql, params,
+                command, params,
                 (execError, results, fields) =>  {
                     connection.end();
                     if(execError) reject(execError);
@@ -37,6 +37,7 @@ const runDbAction = (sql, params) =>
         });
     });
 
+// define error
 class NotFoundError extends Error {
   constructor(message) {
     super(message);
@@ -44,6 +45,15 @@ class NotFoundError extends Error {
     this.name = 'NotFoundError';
   }
 }
+
+// series get
+app.get("/api/series", (req, res, next) => {
+
+    const command = 'select * from series';
+    runDbAction(command, [])
+        .then(results => res.status(200).json(results));
+
+});
 
 // series post
 const checkSeries = body => ['name', 'latest', 'period'].every(c => body[c]);
@@ -54,7 +64,7 @@ app.post('/api/series', (req, res) =>  {
         return;
     }
 
-    const sql = 'insert into series set ?';
+    const command = 'insert into series set ?';
     const params = {
         name: req.body.name,
         latest: req.body.latest,
@@ -62,22 +72,13 @@ app.post('/api/series', (req, res) =>  {
         subscribe: req.body.subscribe || '0'
     };
 
-    runDbAction(sql, params)
+    runDbAction(command, params)
         .then(_ => res.status(201).send());
 
 });
 
-// series get
-app.get("/api/series", (req, res, next) => {
-
-    const sql = 'select * from series';
-    runDbAction(sql, [])
-        .then(results => res.status(200).json(results));
-
-});
-
 // series put
-const newSeries = (req, old) => ({
+const newSeries = (req, old => ({
         id: req.body.id,
         name: req.body.name || old.name,
         latest: req.body.latest || old.latest,
@@ -91,17 +92,17 @@ app.put("/api/series", (req, res, next) => {
         return;
     }
 
-    const selectSql = 'select * FROM `series` WHERE `id` = ?';
-    const updateSql = 'update series set name = ?, latest = ?, period = ?, subscribe = ? where id = ?';
+    const selectCommand = 'select * from `series` WHERE `id` = ?';
+    const updateCommand = 'update series set name = ?, latest = ?, period = ?, subscribe = ? where id = ?';
 
     // confirm exists
-    runDbAction(selectSql, [req.body.id])
+    runDbAction(selectS`selectCommand, [req.body.id])
         .then(results => {
             if(!results.length) throw new NotFoundError('not found');
 
             // do update
             const newRecord = newSeries(req, results[0]);
-            return runDbAction(updateSql,
+            return runDbAction(updateCommand,
                                [newRecord.name,
                                 newRecord.latest,
                                 newRecord.period,
