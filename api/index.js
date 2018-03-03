@@ -121,10 +121,3 @@ app.put("/api/series", (req, res, next) => {
 
 });
 
-// series delete
-app.delete("/api/series", (req, res, next) => {
-
-    res.send('delete');
-
-});
-
