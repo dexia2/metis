@@ -37,6 +37,14 @@ const runDbAction = (sql, params) =>
         });
     });
 
+class NotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.message = message;
+    this.name = 'NotFoundError';
+  }
+}
+
 // series post
 const checkSeries = body => ['name', 'latest', 'period'].every(c => body[c]);
 app.post('/api/series', (req, res) =>  {
@@ -63,10 +71,60 @@ app.post('/api/series', (req, res) =>  {
 app.get("/api/series", (req, res, next) => {
 
     const sql = 'select * from series';
-    const connection = mysql.createConnection(dbSetting);
     runDbAction(sql, [])
         .then(results => res.status(200).json(results));
 
 });
 
+// series put
+const newSeries = (req, old) => ({
+        id: req.body.id,
+        name: req.body.name || old.name,
+        latest: req.body.latest || old.latest,
+        period: req.body.period || old.period ,
+        subscribe: req.body.subscribe || old.subscribe
+    });
+app.put("/api/series", (req, res, next) => {
+
+    if(!req.body.id) {
+        res.status(400).send({ error: 'id required'});
+        return;
+    }
+
+    const selectSql = 'select * FROM `series` WHERE `id` = ?';
+    const updateSql = 'update series set name = ?, latest = ?, period = ?, subscribe = ? where id = ?';
+
+    // confirm exists
+    runDbAction(selectSql, [req.body.id])
+        .then(results => {
+            if(!results.length) throw new NotFoundError('not found');
+
+            // do update
+            const newRecord = newSeries(req, results[0]);
+            return runDbAction(updateSql,
+                               [newRecord.name,
+                                newRecord.latest,
+                                newRecord.period,
+                                newRecord.subscribe,
+                                newRecord.id]);
+        })
+        .then(_ => res.status(204).send())
+        .catch(err => {
+
+            // return not found
+            if(err.name === 'NotFoundError') {
+                res.status(404).send();
+            } else {
+                setTimeout(() => { throw err; });
+            }
+        });
+
+});
+
+// series delete
+app.delete("/api/series", (req, res, next) => {
+
+    res.send('delete');
+
+});
 
