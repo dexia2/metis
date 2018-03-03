@@ -1,3 +1,4 @@
+// read setting
 const fs = require('fs');
 const setting = JSON.parse(
     fs.readFileSync('./setting.json', 'utf-8')
@@ -78,7 +79,7 @@ app.post('/api/series', (req, res) =>  {
 });
 
 // series put
-const newSeries = (req, old => ({
+const newSeries = (req, old) => ({
         id: req.body.id,
         name: req.body.name || old.name,
         latest: req.body.latest || old.latest,
@@ -96,7 +97,7 @@ app.put("/api/series", (req, res, next) => {
     const updateCommand = 'update series set name = ?, latest = ?, period = ?, subscribe = ? where id = ?';
 
     // confirm exists
-    runDbAction(selectS`selectCommand, [req.body.id])
+    runDbAction(selectCommand, [req.body.id])
         .then(results => {
             if(!results.length) throw new NotFoundError('not found');
 
