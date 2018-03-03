@@ -57,7 +57,7 @@ app.get("/api/series", (req, res, next) => {
 });
 
 // series post
-const checkSeries = body => ['name', 'latest', 'period'].every(c => body[c]);
+const checkSeries = body => ['name'].every(c => body[c]);
 app.post('/api/series', (req, res) =>  {
 
     if(!checkSeries(req.body)) {
@@ -68,9 +68,12 @@ app.post('/api/series', (req, res) =>  {
     const command = 'insert into series set ?';
     const params = {
         name: req.body.name,
-        latest: req.body.latest,
-        period: req.body.period,
-        subscribe: req.body.subscribe || '0'
+        latest: req.body.latest || 1,
+        period: req.body.period || 3,
+        subscribe: req.body.subscribe || '0',
+        purchased: req.body.purchased || new Date(9999, 12, 31),
+        published: req.body.published || new Date(9999, 12, 31),
+        author: req.body.author || ''
     };
 
     runDbAction(command, params)
@@ -84,7 +87,10 @@ const newSeries = (req, old) => ({
         name: req.body.name || old.name,
         latest: req.body.latest || old.latest,
         period: req.body.period || old.period ,
-        subscribe: req.body.subscribe || old.subscribe
+        subscribe: req.body.subscribe || old.subscribe,
+        purchased: req.body.purchased || old.purchased,
+        published: req.body.published || old.published,
+        author: req.body.author || old.author
     });
 app.put("/api/series", (req, res, next) => {
 
@@ -94,7 +100,7 @@ app.put("/api/series", (req, res, next) => {
     }
 
     const selectCommand = 'select * from `series` WHERE `id` = ?';
-    const updateCommand = 'update series set name = ?, latest = ?, period = ?, subscribe = ? where id = ?';
+    const updateCommand = 'update series set name = ?, latest = ?, period = ?, subscribe = ?, purchased = ?, published = ?, author = ? where id = ?';
 
     // confirm exists
     runDbAction(selectCommand, [req.body.id])
@@ -108,6 +114,9 @@ app.put("/api/series", (req, res, next) => {
                                 newRecord.latest,
                                 newRecord.period,
                                 newRecord.subscribe,
+                                newRecord.purchased,
+                                newRecord.published,
+                                newRecord.author,
                                 newRecord.id]);
         })
         .then(_ => res.status(204).send())
@@ -123,3 +132,11 @@ app.put("/api/series", (req, res, next) => {
 
 });
 
+// recommend get
+app.get("/api/recommend", (req, res, next) => {
+
+    const command = 'select * from series where date_add(published, interval period month) > now()';
+    runDbAction(command, [])
+        .then(results => res.status(200).json(results));
+
+});
