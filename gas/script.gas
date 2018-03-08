@@ -1,6 +1,7 @@
 // テーブルデータの取得
-function getTableArr(){
-  var sheet = SpreadsheetApp.getActiveSheet();
+function getTableArr(sheetName){
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(sheetName);
   var arr2D = sheet.getRange(1,
                              1,
                              sheet.getLastRow(),
@@ -22,8 +23,8 @@ function toJSObj(arr2D) {
 
 // シリーズ一覧を取得
 function getSeries() {
-  var arr2D = getTableArr();
-  var series = toJSObj(arr2D);
+  var series2D = getTableArr('series');
+  var series = toJSObj(series2D);
   return series;
 }
 
@@ -33,9 +34,10 @@ function getRecommendedSeries(){
   var now = new Date();
   var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var recommended = series.filter(function(s) {
+    if(!s.subscribe) return false;    
     var limit = new Date(s.published.valueOf());
     limit.setMonth(limit.getMonth() + s.period);
-    return s.subscribe = '1' && limit.getTime() <= today.getTime();
+    return limit.getTime() <= today.getTime();
   });
   return recommended;
 }
@@ -43,12 +45,12 @@ function getRecommendedSeries(){
 // mailを送信
 function sendMail(recommeded) {
  
-  var to="my-email@gmail.com";
-  var from="my-email@gmail.com";
-  var sender="my-name";
+  var to = "my-email@gmail.com";
+  var from = "my-email@gmail.com";
+  var sender = "my-name";
  
-  var subject="推薦書籍の紹介";
-  var body ="以下の書籍の購入はお済ですか？\n";
+  var subject = "推薦書籍の紹介";
+  var body = "以下の書籍の購入はお済ですか？\n";
   for(var i = 0; i< recommeded.length; i++){
     body += recommeded[i].name + "\n";
   }
