@@ -45,14 +45,14 @@ function getRecommendedSeries(){
 // mailを送信
 function sendMail(recommeded) {
  
-  var to = "my-email@gmail.com";
-  var from = "my-email@gmail.com";
-  var sender = "my-name";
+  var to = 'my-email@gmail.com';
+  var from = 'my-email@gmail.com';
+  var sender = 'my-name';
  
-  var subject = "推薦書籍の紹介";
-  var body = "以下の書籍の購入はお済ですか？\n";
+  var subject = '推薦書籍の紹介';
+  var body = '以下の書籍の購入はお済ですか？\n';
   for(var i = 0; i< recommeded.length; i++){
-    body += recommeded[i].name + "\n";
+    body += recommeded[i].name + '\n';
   }
   
   GmailApp.sendEmail(
